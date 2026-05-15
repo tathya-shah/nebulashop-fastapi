@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Shop - NebulaShop{% endblock %}
+{% block page_title %}Shop Products{% endblock %}
+{% block page_subtitle %}Browse inventory with animated filters and quick add-to-cart actions.{% endblock %}
+
+{% block content %}
+<section id="home-page" class="home-page">
+  <div class="search-panel">
+    <label for="search" class="search-label">Search by product name</label>
+    <div class="search-input-group">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search" placeholder="Search products by name..." />
+      <div id="suggestion-box" class="suggestions hidden"></div>
+    </div>
+  </div>
+
+  <div id="product-list" class="product-grid"></div>
+
+  <script>
+    window.IS_ADMIN = {{ 'true' if current_user.is_authenticated and current_user.is_admin else 'false' }};
+  </script>
+</section>
+{% endblock %}
+

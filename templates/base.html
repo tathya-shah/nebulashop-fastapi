@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="NebulaShop — Premium e-commerce store with fast shopping and clear sections." />
+  <title>{% block title %}Ecommerce{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <button class="mobile-toggle" id="mobile-toggle" aria-label="Open menu">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="layout-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-panel">
+        <div class="brand-icon">🛍️</div>
+        <div>
+          <h1 class="brand-name">NebulaShop</h1>
+          <p class="brand-tagline">Premium shopping experience</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="/" data-path="/">
+          <span class="nav-icon">🏠</span> Home
+        </a>
+        {% if current_user.is_authenticated %}
+        {% if not current_user.is_admin %}
+        <a class="sidebar-link" href="/cart" data-path="/cart">
+          <span class="nav-icon">🛒</span> Cart
+          <span class="cart-badge hidden" id="cart-count">0</span>
+        </a>
+        <a class="sidebar-link" href="/orders" data-path="/orders">
+          <span class="nav-icon">📦</span> Orders
+        </a>
+        {% else %}
+        <a class="sidebar-link" href="/admin" data-path="/admin">
+          <span class="nav-icon">⚙️</span> Admin
+        </a>
+        {% endif %}
+        <a class="sidebar-link" href="/profile" data-path="/profile">
+          <span class="nav-icon">👤</span> Profile
+        </a>
+        {% else %}
+        <a class="sidebar-link" href="/login" data-path="/login">
+          <span class="nav-icon">🔑</span> Login
+        </a>
+        <a class="sidebar-link" href="/register" data-path="/register">
+          <span class="nav-icon">📝</span> Sign Up
+        </a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-panel">
+        <h3>Categories</h3>
+        <div id="category-buttons" class="filter-group"></div>
+      </div>
+    </aside>
+
+    <div class="content-wrapper">
+      <header class="page-header">
+        <div>
+          <h2>{% block page_title %}Welcome{% endblock %}</h2>
+          <p class="page-subtitle">{% block page_subtitle %}Browse products, view cart and manage catalog.{% endblock %}</p>
+        </div>
+        <div class="page-actions">{% block header_actions %}{% endblock %}</div>
+      </header>
+
+      <main class="page-content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>© {{ year or 2026 }} NebulaShop. Built with FastAPI + Flask.</div>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="{{ url_for('static', filename='cart.js') }}"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='admin.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

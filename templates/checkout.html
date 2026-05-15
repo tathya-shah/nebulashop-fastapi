@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - NebulaShop{% endblock %}
+{% block page_title %}Checkout{% endblock %}
+{% block page_subtitle %}Review your items and complete your order.{% endblock %}
+
+{% block content %}
+<section id="checkout-page" style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
+  <form id="checkout-form" class="product-form" style="max-width: none;">
+    <div style="background: var(--surface); border: 1px solid var(--glass-border); padding: 1.5rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+      <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">Shipping Details</h3>
+      <div class="form-group">
+        <label for="shipping-address">Shipping Address</label>
+        <input type="text" id="shipping-address" required value="{{ current_user.address or '' }}" placeholder="Enter full address" />
+      </div>
+      <div class="form-group" style="margin-top: 1rem;">
+        <label for="shipping-option">Shipping Speed</label>
+        <select id="shipping-option" style="width: 100%; padding: 0.7rem; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--bg); color: var(--text);">
+          <option value="5.00">Standard Shipping (3-5 days) - $5.00</option>
+          <option value="15.00">Express Shipping (1-2 days) - $15.00</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="background: var(--surface); border: 1px solid var(--glass-border); padding: 1.5rem; border-radius: var(--radius-sm);">
+      <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">Payment Information</h3>
+      <div class="form-group">
+        <label for="payment-method">Payment Method</label>
+        <input type="text" id="payment-method" required value="{{ current_user.payment_preference or '' }}" placeholder="e.g. Visa ending in 1234" />
+      </div>
+    </div>
+  </form>
+
+  <div style="background: var(--surface-2); border: 1px solid var(--glass-border); padding: 1.5rem; border-radius: var(--radius-sm); height: fit-content;">
+    <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">Order Summary</h3>
+    <div id="checkout-items" style="margin-bottom: 1rem; font-size: 0.9rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+      <!-- Loaded dynamically -->
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+      <span style="color: var(--text-muted);">Subtotal</span>
+      <strong id="summary-subtotal">$0.00</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+      <span style="color: var(--text-muted);">Tax (10%)</span>
+      <strong id="summary-tax">$0.00</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+      <span style="color: var(--text-muted);">Shipping</span>
+      <strong id="summary-shipping">$5.00</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; font-size: 1.2rem;">
+      <span>Total</span>
+      <strong id="summary-total" style="color: var(--primary);">$0.00</strong>
+    </div>
+    
+    <button type="button" id="place-order-btn" class="btn btn-primary" style="width: 100%;">Place Order</button>
+    <button type="button" id="cancel-checkout-btn" class="btn btn-danger" style="width: 100%; margin-top: 0.75rem;">Cancel Checkout</button>
+  </div>
+</section>
+
+<script>
+let cartSubtotal = 0;
+
+async function loadCheckoutCart() {
+    try {
+        const response = await fetch('/api/cart');
+        const data = await response.json();
+        
+        const container = document.getElementById('checkout-items');
+        if (data.items.length === 0) {
+            window.location.href = '/cart';
+            return;
+        }
+        
+        container.innerHTML = data.items.map(item => {
+            const specsText = Object.entries(item.selected_specs || {}).map(([k, v]) => `${v}`).join(' | ');
+            const specHtml = specsText ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">${specsText}</div>` : '';
+            return `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; align-items: flex-start;">
+                <div>
+                    <span style="font-weight: 500;">${item.quantity}x ${item.name}</span>
+                    ${specHtml}
+                </div>
+                <span>$${item.subtotal.toFixed(2)}</span>
+            </div>
+            `;
+        }).join('');
+        
+        cartSubtotal = data.total;
+        updateTotals();
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function updateTotals() {
+    const shippingFee = parseFloat(document.getElementById('shipping-option').value);
+    const tax = cartSubtotal * 0.10;
+    const total = cartSubtotal + tax + shippingFee;
+    
+    document.getElementById('summary-subtotal').innerText = `$${cartSubtotal.toFixed(2)}`;
+    document.getElementById('summary-tax').innerText = `$${tax.toFixed(2)}`;
+    document.getElementById('summary-shipping').innerText = `$${shippingFee.toFixed(2)}`;
+    document.getElementById('summary-total').innerText = `$${total.toFixed(2)}`;
+}
+
+document.getElementById('shipping-option').addEventListener('change', updateTotals);
+
+document.getElementById('place-order-btn').addEventListener('click', async () => {
+    const form = document.getElementById('checkout-form');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const shipping_address = document.getElementById('shipping-address').value;
+    const shipping_fee = document.getElementById('shipping-option').value;
+    const payment_method = document.getElementById('payment-method').value;
+    
+    try {
+        const response = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shipping_address, shipping_fee, payment_method })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (typeof showToast !== 'undefined') showToast('Order placed successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = `/order/${data.order_id}`;
+            }, 800);
+        } else {
+            const result = await response.json();
+            if (typeof showToast !== 'undefined') showToast(result.detail || 'Checkout failed', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        if (typeof showToast !== 'undefined') showToast('An error occurred', 'error');
+    }
+});
+
+document.getElementById('cancel-checkout-btn').addEventListener('click', async () => {
+    try {
+        await fetch('/api/cart', { method: 'DELETE' });
+        if (typeof showToast !== 'undefined') showToast('Checkout cancelled. Cart emptied.', 'info');
+        setTimeout(() => { window.location.href = '/'; }, 600);
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', loadCheckoutCart);
+</script>
+{% endblock %}

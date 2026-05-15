@@ -1,0 +1,805 @@
+{% extends "base.html" %}
+
+{% block title %}Product Details - NebulaShop{% endblock %}
+
+{% block content %}
+<section id="product-detail-page" style="max-width: 1100px; margin: 0 auto; padding: 1rem 0 3rem;">
+
+  <!-- Breadcrumb -->
+  <nav class="pdp-breadcrumb">
+    <a href="/">Home</a> <span>/</span> <span id="bc-category">...</span> <span>/</span> <span id="bc-name">...</span>
+  </nav>
+
+  <!-- Main Grid -->
+  <div class="pdp-grid">
+
+    <!-- ─── Left: Gallery ─── -->
+    <div class="pdp-gallery">
+      <div class="pdp-gallery-main" id="gallery-main">
+        <span id="product-icon" style="font-size: 7rem;">📦</span>
+      </div>
+      <div class="pdp-gallery-thumbs" id="gallery-thumbs">
+        <div class="pdp-thumb active">Front</div>
+        <div class="pdp-thumb">Side</div>
+        <div class="pdp-thumb">Back</div>
+        <div class="pdp-thumb">Detail</div>
+      </div>
+    </div>
+
+    <!-- ─── Right: Info ─── -->
+    <div class="pdp-info">
+
+      <!-- Brand / Category -->
+      <span id="product-category" class="category-badge" style="width: fit-content; margin-bottom: 0.5rem;">Loading...</span>
+
+      <!-- Title -->
+      <h1 id="product-name" class="pdp-title">Loading...</h1>
+
+      <!-- Ratings -->
+      <div class="pdp-ratings">
+        <span class="pdp-stars">★★★★<span style="opacity: 0.3;">★</span></span>
+        <span class="pdp-rating-count">4.2 (1,284 ratings)</span>
+        <span class="pdp-bestseller">🏆 Best Seller</span>
+      </div>
+
+      <hr class="pdp-divider" />
+
+      <!-- Price -->
+      <div class="pdp-price-block">
+        <span class="pdp-price-label">Price:</span>
+        <span id="product-price" class="pdp-price">$0.00</span>
+        <span class="pdp-price-mrp">
+          MRP: <s id="product-mrp">$0.00</s>
+        </span>
+        <span class="pdp-discount" id="product-discount">Save 0%</span>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.25rem 0 0;">Inclusive of all taxes</p>
+
+      <hr class="pdp-divider" />
+
+      <!-- Dynamic Specs Selectors -->
+      <div id="specs-container" style="margin-bottom: 0.25rem;">
+        <!-- E.g., Storage: [256GB] [512GB] -->
+      </div>
+
+      <!-- Stock & Delivery -->
+      <div class="pdp-availability">
+        <div class="pdp-stock-row">
+          <span class="pdp-stock-dot" id="stock-dot"></span>
+          <span id="product-stock">Checking stock...</span>
+        </div>
+        <div class="pdp-delivery-info">
+          <div>🚚 <strong>FREE delivery</strong> <span id="delivery-date" style="color: var(--text);">Loading...</span></div>
+          <div style="margin-top: 0.3rem;">⚡ <strong>Fastest delivery</strong> Tomorrow — order within <span style="color: var(--danger); font-weight: 600;" id="order-countdown">--</span></div>
+        </div>
+      </div>
+
+      <!-- Add to Cart Area -->
+      <div id="add-to-cart-area" class="pdp-actions">
+        <div class="quantity-control pdp-qty">
+          <button class="qty-btn" onclick="updateQty(-1)">−</button>
+          <input type="number" id="detail-qty" value="1" min="1" max="10" readonly>
+          <button class="qty-btn" onclick="updateQty(1)">+</button>
+        </div>
+        <button id="add-to-cart-btn" class="btn btn-primary pdp-cart-btn">🛒 Add to Cart</button>
+        <button id="buy-now-btn" class="btn btn-accent pdp-buy-btn">⚡ Buy Now</button>
+      </div>
+
+      <!-- Secure Transaction Badge -->
+      <div class="pdp-trust-badges">
+        <span>🔒 Secure Transaction</span>
+        <span>📦 Easy Returns</span>
+        <span>✅ NebulaShop Verified</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── Bottom: Description / About ─── -->
+  <div class="pdp-bottom-section">
+
+    <!-- Description Panel -->
+    <div class="pdp-panel">
+      <h3 class="pdp-panel-title" onclick="togglePanel('panel-desc')">
+        <span>📋 About this item</span>
+        <span class="pdp-toggle-icon" id="toggle-panel-desc">▾</span>
+      </h3>
+      <div id="panel-desc" class="pdp-panel-body open">
+        <p id="product-desc" style="color: var(--text-muted); line-height: 1.8; font-size: 0.95rem;">
+          Loading description...
+        </p>
+      </div>
+    </div>
+
+    <!-- Specifications Table Panel -->
+    <div class="pdp-panel">
+      <h3 class="pdp-panel-title" onclick="togglePanel('panel-specs')">
+        <span>⚙️ Technical Specifications</span>
+        <span class="pdp-toggle-icon" id="toggle-panel-specs">▾</span>
+      </h3>
+      <div id="panel-specs" class="pdp-panel-body open">
+        <table class="pdp-specs-table" id="specs-table">
+          <tbody id="specs-table-body">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Reviews Panel (Mock) -->
+    <div class="pdp-panel">
+      <h3 class="pdp-panel-title" onclick="togglePanel('panel-reviews')">
+        <span>⭐ Customer Reviews</span>
+        <span class="pdp-toggle-icon" id="toggle-panel-reviews">▸</span>
+      </h3>
+      <div id="panel-reviews" class="pdp-panel-body">
+        <div class="pdp-review">
+          <div class="pdp-review-header">
+            <strong>Alex M.</strong>
+            <span class="pdp-review-stars">★★★★★</span>
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Verified Purchase</span>
+          </div>
+          <p>Absolutely love it! The build quality is top-notch and performance is outstanding. Worth every penny.</p>
+        </div>
+        <div class="pdp-review">
+          <div class="pdp-review-header">
+            <strong>Sara K.</strong>
+            <span class="pdp-review-stars">★★★★<span style="opacity:0.3">★</span></span>
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Verified Purchase</span>
+          </div>
+          <p>Great product overall. Shipping was fast and packaging was premium. Only minor gripe is the price point.</p>
+        </div>
+        <div class="pdp-review">
+          <div class="pdp-review-header">
+            <strong>Priya R.</strong>
+            <span class="pdp-review-stars">★★★★★</span>
+            <span style="color: var(--text-muted); font-size: 0.8rem;">Verified Purchase</span>
+          </div>
+          <p>Exceeded my expectations. The specs are true to listing. Will definitely shop again from NebulaShop!</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<style>
+/* ── Breadcrumb ── */
+.pdp-breadcrumb {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+.pdp-breadcrumb a { color: var(--primary); text-decoration: none; }
+.pdp-breadcrumb span { margin: 0 0.3rem; }
+
+/* ── Grid ── */
+.pdp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+}
+
+/* ── Gallery ── */
+.pdp-gallery-main {
+    background: var(--surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    height: 420px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+.pdp-gallery-main::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(124,92,252,0.04), rgba(8,145,178,0.04));
+    pointer-events: none;
+}
+.pdp-gallery-thumbs {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+.pdp-thumb {
+    flex: 1;
+    height: 60px;
+    background: var(--surface);
+    border: 2px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-weight: 500;
+}
+.pdp-thumb:hover, .pdp-thumb.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(124,92,252,0.06);
+}
+
+/* ── Title ── */
+.pdp-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+/* ── Ratings ── */
+.pdp-ratings {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+.pdp-stars { color: #f59e0b; font-size: 1.1rem; letter-spacing: 1px; }
+.pdp-rating-count { color: var(--text-muted); font-size: 0.85rem; }
+.pdp-bestseller {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #000;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.pdp-divider {
+    border: none;
+    border-top: 1px solid var(--glass-border);
+    margin: 1rem 0;
+}
+
+/* ── Price ── */
+.pdp-price-block {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.pdp-price-label { font-size: 0.85rem; color: var(--text-muted); }
+.pdp-price { font-size: 2rem; font-weight: 800; color: var(--primary); }
+.pdp-price-mrp { font-size: 0.85rem; color: var(--text-muted); }
+.pdp-discount {
+    background: var(--danger);
+    color: #fff;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ── Stock & Delivery ── */
+.pdp-availability {
+    background: var(--surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+}
+.pdp-stock-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+.pdp-stock-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.pdp-delivery-info { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; }
+
+/* ── Actions ── */
+.pdp-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: stretch;
+    margin: 1.25rem 0;
+}
+.pdp-qty {
+    background: var(--surface);
+    padding: 0 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.pdp-qty .qty-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1.3rem;
+    color: var(--text);
+    padding: 0.4rem;
+    transition: color 0.2s;
+}
+.pdp-qty .qty-btn:hover { color: var(--primary); }
+.pdp-qty input {
+    width: 38px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1rem;
+}
+.pdp-cart-btn {
+    flex: 1;
+    font-size: 1rem;
+    padding: 0.85rem 1.5rem;
+}
+.pdp-buy-btn {
+    flex: 1;
+    font-size: 1rem;
+    padding: 0.85rem 1.5rem;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 700;
+    transition: all var(--transition);
+}
+.pdp-buy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(245,158,11,0.35);
+}
+
+/* ── Trust Badges ── */
+.pdp-trust-badges {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* ── Spec Selectors ── */
+.spec-group { margin-bottom: 1.25rem; }
+.spec-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+}
+.spec-options { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.spec-btn {
+    padding: 0.55rem 1.2rem;
+    border: 2px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 0.88rem;
+}
+.spec-btn:hover { border-color: var(--primary); }
+.spec-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 2px 12px var(--primary-glow);
+}
+
+/* ── Bottom Panels ── */
+.pdp-bottom-section { display: flex; flex-direction: column; gap: 1rem; }
+.pdp-panel {
+    background: var(--surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+.pdp-panel-title {
+    padding: 1rem 1.25rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+    user-select: none;
+}
+.pdp-panel-title:hover { background: rgba(0,0,0,0.02); }
+.pdp-toggle-icon { font-size: 1.1rem; color: var(--text-muted); }
+.pdp-panel-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease;
+    padding: 0 1.25rem;
+}
+.pdp-panel-body.open {
+    max-height: 800px;
+    padding: 0 1.25rem 1.25rem;
+}
+
+/* ── Specs Table ── */
+.pdp-specs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+.pdp-specs-table tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+.pdp-specs-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+.pdp-specs-table td:first-child {
+    font-weight: 600;
+    color: var(--text-muted);
+    width: 35%;
+}
+
+/* ── Reviews ── */
+.pdp-review {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+.pdp-review:last-child { border-bottom: none; }
+.pdp-review-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+.pdp-review-stars { color: #f59e0b; font-size: 0.9rem; }
+.pdp-review p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; margin: 0; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .pdp-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .pdp-actions { flex-direction: column; }
+    .pdp-title { font-size: 1.5rem; }
+}
+</style>
+
+<script>
+const categoryIcons = {
+    'Laptops': '💻', 'Phones': '📱', 'Tablets': '📱', 'Headphones': '🎧', 'General': '📦'
+};
+
+let currentProduct = null;
+let selectedSpecs = {};
+
+async function loadProduct() {
+    try {
+        const response = await fetch('/api/products/{{ product_id }}');
+        if (!response.ok) {
+            document.getElementById('product-detail-page').innerHTML = '<p class="empty-state"><span class="empty-state-icon">😕</span>Product not found.</p>';
+            return;
+        }
+        
+        currentProduct = await response.json();
+        const icon = categoryIcons[currentProduct.category] || '📦';
+        
+        // Breadcrumb
+        document.getElementById('bc-category').innerText = currentProduct.category;
+        document.getElementById('bc-name').innerText = currentProduct.name;
+        
+        // Main icon
+        document.getElementById('product-icon').innerText = icon;
+        document.getElementById('product-category').innerText = icon + ' ' + currentProduct.category;
+        document.getElementById('product-name').innerText = currentProduct.name;
+        
+        // Price with fake MRP (spec-based). Color changes do NOT affect price.
+        // We'll compute final price after specs are rendered; for now initialize UI with base price.
+        const basePrice = currentProduct.price;
+        const mrp = Math.round(basePrice * 1.25);
+        const discount = Math.round(((mrp - basePrice) / mrp) * 100);
+        document.getElementById('product-price').innerText = `$${basePrice.toFixed(2)}`;
+        document.getElementById('product-mrp').innerHTML = `MRP: <s>$${mrp.toFixed(2)}</s>`;
+        document.getElementById('product-discount').innerText = `Save ${discount}%`;
+        
+        // Helper to find variant based on selected specs
+        window.__findSelectedVariant = () => {
+            if (!currentProduct.variants || currentProduct.variants.length === 0) return null;
+            
+            return currentProduct.variants.find(v => {
+                // Compare selectedSpecs with v.specs
+                const vSpecs = v.specs;
+                return Object.keys(selectedSpecs).every(key => vSpecs[key] === selectedSpecs[key]);
+            });
+        };
+        
+        window.__calcSpecFinalPrice = () => {
+            const variant = window.__findSelectedVariant();
+            return variant ? variant.price : currentProduct.price;
+        };
+        
+        // Description
+        document.getElementById('product-desc').innerText = currentProduct.description || 'No description available for this product.';
+        
+        // Stock
+        const stockEl = document.getElementById('product-stock');
+        const stockDot = document.getElementById('stock-dot');
+        if (currentProduct.stock > 0) {
+            if (currentProduct.stock <= 5) {
+                stockEl.innerHTML = `Only <span style="color: var(--danger); font-weight: 700;">${currentProduct.stock}</span> left — order soon!`;
+                stockDot.style.background = 'var(--warning)';
+            } else {
+                stockEl.innerText = `In Stock (${currentProduct.stock} available)`;
+                stockDot.style.background = 'var(--success)';
+            }
+            document.getElementById('detail-qty').max = currentProduct.stock;
+        } else {
+            stockEl.innerText = 'Currently Unavailable';
+            stockDot.style.background = 'var(--danger)';
+            document.getElementById('add-to-cart-btn').disabled = true;
+            document.getElementById('buy-now-btn').disabled = true;
+            document.querySelector('.pdp-qty').style.opacity = '0.4';
+            document.querySelector('.pdp-qty').style.pointerEvents = 'none';
+        }
+        
+        // Delivery date (mock: 3-5 days from now)
+        const deliveryDate = new Date();
+        deliveryDate.setDate(deliveryDate.getDate() + 4);
+        document.getElementById('delivery-date').innerText = deliveryDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        
+        // Countdown
+        updateCountdown();
+        setInterval(updateCountdown, 60000);
+
+        // Specs selectors
+        renderSpecs();
+        
+        // Specs table
+        renderSpecsTable();
+
+        // Check Admin - Removed restriction to allow testing
+        /*
+        try {
+            const meRes = await fetch('/api/auth/me');
+            if (meRes.ok) {
+                const me = await meRes.json();
+                if (me && me.is_admin) {
+                    document.getElementById('add-to-cart-area').innerHTML = '<p style="color: var(--warning); font-weight: 600; padding: 1rem 0;">🔒 Admins cannot purchase items.</p>';
+                }
+            }
+        } catch(e) {}
+        */
+        
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function updateCountdown() {
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setHours(23, 59, 0, 0);
+    const diffMs = cutoff - now;
+    const hrs = Math.floor(diffMs / 3600000);
+    const mins = Math.floor((diffMs % 3600000) / 60000);
+    const el = document.getElementById('order-countdown');
+    if (el) el.innerText = `${hrs} hrs ${mins} mins`;
+}
+
+function renderSpecs() {
+    const container = document.getElementById('specs-container');
+    container.innerHTML = '';
+    
+    if (!currentProduct.specs_config || Object.keys(currentProduct.specs_config).length === 0) {
+        updateDisplayedPrice();
+        return;
+    }
+
+    for (const [specName, options] of Object.entries(currentProduct.specs_config)) {
+        if (!selectedSpecs[specName]) {
+            selectedSpecs[specName] = options[0];
+        }
+
+        const group = document.createElement('div');
+        group.className = 'spec-group';
+        
+        const label = document.createElement('label');
+        label.className = 'spec-label';
+        label.innerText = specName + ': ' + selectedSpecs[specName];
+        group.appendChild(label);
+
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'spec-options';
+
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = `spec-btn ${selectedSpecs[specName] === opt ? 'active' : ''}`;
+            btn.innerText = opt;
+            btn.onclick = () => selectSpec(specName, opt);
+            optionsDiv.appendChild(btn);
+        });
+
+        group.appendChild(optionsDiv);
+        container.appendChild(group);
+    }
+
+    updateDisplayedPrice();
+}
+
+function updateDisplayedPrice() {
+    try {
+        const variant = window.__findSelectedVariant();
+        const price = variant ? variant.price : currentProduct.price;
+        const stock = variant ? variant.stock : currentProduct.stock;
+        
+        const mrp = Math.round(price * 1.25);
+        const discount = Math.round(((mrp - price) / mrp) * 100);
+
+        document.getElementById('product-price').innerText = `$${Number(price).toFixed(2)}`;
+        document.getElementById('product-mrp').innerHTML = `MRP: <s>$${mrp.toFixed(2)}</s>`;
+        document.getElementById('product-discount').innerText = `Save ${discount}%`;
+        
+        // Update stock display
+        const stockEl = document.getElementById('product-stock');
+        const stockDot = document.getElementById('stock-dot');
+        const cartBtn = document.getElementById('add-to-cart-btn');
+        const buyBtn = document.getElementById('buy-now-btn');
+        const qtyCtrl = document.querySelector('.pdp-qty');
+
+        if (stock > 0) {
+            if (stock <= 5) {
+                stockEl.innerHTML = `Only <span style="color: var(--danger); font-weight: 700;">${stock}</span> left — order soon!`;
+                stockDot.style.background = 'var(--warning)';
+            } else {
+                stockEl.innerText = `In Stock (${stock} available)`;
+                stockDot.style.background = 'var(--success)';
+            }
+            if (cartBtn) cartBtn.disabled = false;
+            if (buyBtn) buyBtn.disabled = false;
+            if (qtyCtrl) {
+                qtyCtrl.style.opacity = '1';
+                qtyCtrl.style.pointerEvents = 'all';
+            }
+            document.getElementById('detail-qty').max = stock;
+        } else {
+            stockEl.innerText = 'Variant Out of Stock';
+            stockDot.style.background = 'var(--danger)';
+            if (cartBtn) cartBtn.disabled = true;
+            if (buyBtn) buyBtn.disabled = true;
+            if (qtyCtrl) {
+                qtyCtrl.style.opacity = '0.4';
+                qtyCtrl.style.pointerEvents = 'none';
+            }
+        }
+    } catch (e) {
+        console.error('Error updating price/stock:', e);
+    }
+}
+
+function renderSpecsTable() {
+    const tbody = document.getElementById('specs-table-body');
+    tbody.innerHTML = '';
+    
+    // Category-specific specs
+    const baseSpecs = {
+        'Brand': 'NebulaShop Original',
+        'Category': currentProduct.category,
+        'Model': currentProduct.name,
+    };
+    
+    // Add dynamic specs from config
+    if (currentProduct.specs_config) {
+        for (const [key, vals] of Object.entries(currentProduct.specs_config)) {
+            baseSpecs[key + ' Options'] = vals.join(', ');
+        }
+    }
+    
+    baseSpecs['Warranty'] = '1 Year Manufacturer Warranty';
+    baseSpecs['Return Policy'] = '30-Day Easy Returns';
+
+    for (const [key, val] of Object.entries(baseSpecs)) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${key}</td><td>${val}</td>`;
+        tbody.appendChild(tr);
+    }
+}
+
+function selectSpec(specName, option) {
+    selectedSpecs[specName] = option;
+    renderSpecs();
+}
+
+function togglePanel(panelId) {
+    const panel = document.getElementById(panelId);
+    const icon = document.getElementById('toggle-' + panelId);
+    panel.classList.toggle('open');
+    if (icon) icon.innerText = panel.classList.contains('open') ? '▾' : '▸';
+}
+
+function updateQty(change) {
+    if (!currentProduct) return;
+    const input = document.getElementById('detail-qty');
+    const maxStock = parseInt(input.max) || currentProduct.stock;
+    let val = parseInt(input.value) || 1;
+    val += change;
+    if (val >= 1 && val <= maxStock) {
+        input.value = val;
+    }
+}
+
+document.getElementById('add-to-cart-btn')?.addEventListener('click', async () => {
+    if (!currentProduct) return;
+    const qty = parseInt(document.getElementById('detail-qty').value) || 1;
+    
+    try {
+        const response = await fetch('/api/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                product_id: currentProduct.id, 
+                quantity: qty,
+                specs: selectedSpecs,
+                // backend recalculates price from RAM/Storage; Color does not affect price
+            })
+        });
+        
+        if (response.ok) {
+            if (typeof showToast !== 'undefined') showToast('Added to cart!', 'success');
+            setTimeout(() => { window.location.href = '/cart'; }, 600);
+        } else {
+            const result = await response.json();
+            if (response.status === 401) {
+                window.location.href = '/login';
+            } else {
+                if (typeof showToast !== 'undefined') showToast(result.detail || 'Failed to add', 'error');
+            }
+        }
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+document.getElementById('buy-now-btn')?.addEventListener('click', async () => {
+    if (!currentProduct) return;
+    const qty = parseInt(document.getElementById('detail-qty').value) || 1;
+    
+    try {
+        const response = await fetch('/api/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                product_id: currentProduct.id, 
+                quantity: qty,
+                specs: selectedSpecs,
+                // backend recalculates price from RAM/Storage; Color does not affect price
+            })
+        });
+        
+        if (response.ok) {
+            window.location.href = '/checkout';
+        } else {
+            const result = await response.json();
+            if (response.status === 401) {
+                window.location.href = '/login';
+            } else {
+                if (typeof showToast !== 'undefined') showToast(result.detail || 'Failed to add', 'error');
+            }
+        }
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', loadProduct);
+</script>
+{% endblock %}

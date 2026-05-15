@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice #{{ order_id }} - NebulaShop{% endblock %}
+{% block page_title %}Order Confirmation{% endblock %}
+{% block page_subtitle %}Thank you for your purchase! Here is your invoice.{% endblock %}
+
+{% block content %}
+<section id="invoice-page" style="max-width: 800px; margin: 0 auto; background: var(--surface); border: 1px solid var(--glass-border); padding: 2.5rem; border-radius: var(--radius);">
+  <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--glass-border); padding-bottom: 1.5rem; margin-bottom: 2rem;">
+    <div>
+      <h2 style="margin: 0; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">NebulaShop</h2>
+      <p style="margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.9rem;" id="invoice-date">Date: Loading...</p>
+    </div>
+    <div style="text-align: right;">
+      <h3 style="margin: 0; font-size: 1.4rem;">Invoice #{{ order_id }}</h3>
+      <span class="category-badge" id="invoice-status" style="display: inline-block; margin-top: 0.5rem; background: var(--success); color: white;">Loading...</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <div>
+      <h4 style="margin: 0 0 0.5rem; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem;">Billed To</h4>
+      <p style="margin: 0; font-weight: 600;">{{ current_user.username }}</p>
+      <p style="margin: 0.2rem 0; color: var(--text-muted); white-space: pre-line;" id="invoice-address">Loading...</p>
+    </div>
+    <div style="text-align: right;">
+      <h4 style="margin: 0 0 0.5rem; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem;">Payment Method</h4>
+      <p style="margin: 0; color: var(--text-muted);" id="invoice-payment">Loading...</p>
+    </div>
+  </div>
+
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+    <thead>
+      <tr style="border-bottom: 1px solid var(--glass-border); text-align: left;">
+        <th style="padding: 0.8rem 0; color: var(--text-muted); font-size: 0.9rem;">Item</th>
+        <th style="padding: 0.8rem 0; color: var(--text-muted); font-size: 0.9rem; text-align: center;">Qty</th>
+        <th style="padding: 0.8rem 0; color: var(--text-muted); font-size: 0.9rem; text-align: right;">Price</th>
+        <th style="padding: 0.8rem 0; color: var(--text-muted); font-size: 0.9rem; text-align: right;">Total</th>
+      </tr>
+    </thead>
+    <tbody id="invoice-items">
+      <!-- Items load here -->
+    </tbody>
+  </table>
+
+  <div style="display: flex; justify-content: flex-end;">
+    <div style="width: 300px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-muted);">
+        <span>Subtotal</span>
+        <span id="invoice-subtotal">$0.00</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-muted);">
+        <span>Tax (10%)</span>
+        <span id="invoice-tax">$0.00</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+        <span>Shipping</span>
+        <span id="invoice-shipping">$0.00</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 700;">
+        <span>Total</span>
+        <span id="invoice-total" style="color: var(--primary);">$0.00</span>
+      </div>
+    </div>
+  </div>
+  
+  <div style="margin-top: 3rem; text-align: center;" id="invoice-actions">
+    <button onclick="window.print()" class="btn btn-secondary">🖨️ Print Invoice</button>
+    <a href="/orders" class="btn btn-primary" style="margin-left: 1rem;">View All Orders</a>
+  </div>
+</section>
+
+<script>
+async function loadInvoice() {
+    try {
+        const response = await fetch('/api/orders/{{ order_id }}');
+        if (!response.ok) {
+            document.getElementById('invoice-page').innerHTML = '<p class="empty-state">Invoice not found or unauthorized.</p>';
+            return;
+        }
+        
+        const order = await response.json();
+        
+        document.getElementById('invoice-date').innerText = 'Date: ' + order.created_at;
+        document.getElementById('invoice-status').innerText = order.status;
+        document.getElementById('invoice-address').innerText = order.shipping_address || 'No address provided';
+        document.getElementById('invoice-payment').innerText = order.payment_method || 'No payment method provided';
+        
+        document.getElementById('invoice-items').innerHTML = order.items.map(item => {
+            const specsText = Object.entries(item.selected_specs || {}).map(([k, v]) => `${v}`).join(' | ');
+            const specHtml = specsText ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">${specsText}</div>` : '';
+            return `
+            <tr style="border-bottom: 1px solid var(--glass-border);">
+                <td style="padding: 1rem 0; font-weight: 500;">
+                    ${item.name}
+                    ${specHtml}
+                </td>
+                <td style="padding: 1rem 0; text-align: center;">${item.quantity}</td>
+                <td style="padding: 1rem 0; text-align: right; color: var(--text-muted);">$${item.price.toFixed(2)}</td>
+                <td style="padding: 1rem 0; text-align: right; font-weight: 600;">$${item.subtotal.toFixed(2)}</td>
+            </tr>
+            `;
+        }).join('');
+        
+        document.getElementById('invoice-subtotal').innerText = '$' + order.subtotal.toFixed(2);
+        document.getElementById('invoice-tax').innerText = '$' + order.tax.toFixed(2);
+        document.getElementById('invoice-shipping').innerText = '$' + order.shipping_fee.toFixed(2);
+        document.getElementById('invoice-total').innerText = '$' + order.total.toFixed(2);
+        
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadInvoice);
+</script>
+{% endblock %}

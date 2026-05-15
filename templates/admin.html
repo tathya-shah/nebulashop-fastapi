@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - NebulaShop{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+{% block page_subtitle %}Create products, update inventory, and manage the catalog.{% endblock %}
+{% block header_actions %}<a class="btn btn-secondary" href="/">← Back to Shop</a>{% endblock %}
+
+{% block content %}
+<section id="admin-page" class="admin-page">
+  <div class="admin-tabs">
+    <button class="tab-btn active" data-tab="products">📦 Product Management</button>
+    <button class="tab-btn" data-tab="analytics">📊 Analytics Dashboard</button>
+  </div>
+
+  <div class="admin-header-actions">
+    <button class="btn btn-primary" onclick="openProductModal()">➕ Add New Product</button>
+  </div>
+
+  <div class="tab-content" id="products-tab">
+    <div class="admin-grid">
+      <div class="admin-card">
+        <h3>📋 Product Catalog</h3>
+        <div id="admin-products" class="admin-products"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="analytics-tab" style="display: none;">
+    <div class="analytics-layout">
+      <!-- KPI Row -->
+      <div id="analytics-kpis" class="analytics-kpi-grid"></div>
+      
+      <!-- Charts Row -->
+      <div class="analytics-charts-grid">
+        <div class="admin-card chart-container-full">
+          <h3>📈 Revenue Trends (Last 7 Days)</h3>
+          <canvas id="revenue-chart"></canvas>
+        </div>
+        
+        <div class="admin-card chart-container-half">
+          <h3>🥧 Category Distribution</h3>
+          <canvas id="category-chart"></canvas>
+        </div>
+
+        <div class="admin-card chart-container-half">
+          <h3>⚠️ Out of Stock Products</h3>
+          <div id="out-of-stock-list" class="recent-orders-compact"></div>
+        </div>
+
+        <div class="admin-card chart-container-half">
+          <h3>📉 Low Stock Products</h3>
+          <div id="low-stock-list" class="recent-orders-compact"></div>
+        </div>
+
+        <div class="admin-card chart-container-full">
+          <h3>📋 Recent Activity</h3>
+          <div id="recent-orders-list" class="recent-orders-compact"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- Unified Product Editor Modal -->
+<div id="product-editor-modal" class="modal" style="display: none;">
+  <div class="modal-content wide">
+    <div class="modal-header">
+      <h3 id="modal-title">📦 Edit Product</h3>
+      <button class="btn btn-close" onclick="closeProductModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="product-editor-form">
+        <input type="hidden" id="editor-product-id">
+        
+        <div class="modal-section">
+          <h4>📌 Basic Information</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Product Name</label>
+              <input type="text" id="editor-name" required placeholder="e.g. Premium Pizza">
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <input type="text" id="editor-category" placeholder="e.g. Food">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Base Price ($)</label>
+              <input type="number" id="editor-price" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Base Stock</label>
+              <input type="number" id="editor-stock" required>
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label>Description</label>
+            <textarea id="editor-description" rows="3" placeholder="Describe your product..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <h4>⚙️ Specifications & Variants</h4>
+          <p class="spec-help">Define types (e.g. Size) and values (e.g. Small, Large) to generate unique combinations.</p>
+          <div id="editor-spec-builder" class="spec-builder"></div>
+          <button type="button" class="btn btn-secondary btn-add-spec" onclick="addSpecRow('editor-spec-builder')">＋ Add Specification</button>
+          
+          <div style="margin-top: 1.5rem;">
+            <button type="button" class="btn btn-primary" onclick="generateEditorVariants()">🔄 Generate Variants</button>
+          </div>
+
+          <div id="editor-variant-container" style="margin-top: 2rem; display: none;">
+            <label style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">Generated Variants</label>
+            <div id="editor-variant-list" class="variant-grid"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - NebulaShop{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Manage your shipping address and payment preferences.{% endblock %}
+
+{% block content %}
+<section id="profile-page" style="max-width: 600px; margin: 0 auto;">
+  <form id="profile-form" class="product-form">
+    <div class="form-group">
+      <label for="profile-username">Username</label>
+      <input type="text" id="profile-username" value="{{ current_user.username }}" />
+    </div>
+    <div class="form-group" style="margin-top: 1rem;">
+      <label for="profile-address">Shipping Address</label>
+      <input type="text" id="profile-address" value="{{ current_user.address or '' }}" placeholder="123 Main St, City, Country" />
+    </div>
+    <div class="form-group" style="margin-top: 1rem;">
+      <label for="profile-payment">Payment Preference</label>
+      <input type="text" id="profile-payment" value="{{ current_user.payment_preference or '' }}" placeholder="e.g. Visa ending in 4242" />
+    </div>
+    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+      <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+      <button type="button" id="logout-btn" class="btn btn-danger" style="flex: 1;">Logout</button>
+    </div>
+  </form>
+
+  <form id="password-form" class="product-form" style="margin-top: 2rem;">
+    <h3 style="margin-top: 0;">Change Password</h3>
+    <div class="form-group password-group" style="position: relative;">
+      <label for="current-password">Current Password</label>
+      <input type="password" id="current-password" required />
+      <span class="toggle-password" onclick="togglePassword('current-password')" style="position: absolute; right: 10px; top: 38px; cursor: pointer;">👁️</span>
+    </div>
+    <div class="form-group password-group" style="margin-top: 1rem; position: relative;">
+      <label for="new-password">New Password</label>
+      <input type="password" id="new-password" required minlength="6" />
+      <span class="toggle-password" onclick="togglePassword('new-password')" style="position: absolute; right: 10px; top: 38px; cursor: pointer;">👁️</span>
+    </div>
+    <div style="margin-top: 1.5rem;">
+      <button type="submit" class="btn btn-secondary" style="width: 100%;">Update Password</button>
+    </div>
+  </form>
+</section>
+
+<script>
+document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('profile-username').value;
+    const address = document.getElementById('profile-address').value;
+    const payment_preference = document.getElementById('profile-payment').value;
+    
+    try {
+        const response = await fetch('/api/auth/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, address, payment_preference })
+        });
+        
+        if (response.ok) {
+            if (typeof showToast !== 'undefined') showToast('Profile updated successfully', 'success');
+        } else {
+            if (typeof showToast !== 'undefined') showToast('Failed to update profile', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+    try {
+        const response = await fetch('/api/auth/logout', { method: 'POST' });
+        if (response.ok) {
+            window.location.href = '/login';
+        }
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+document.getElementById('password-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const current_password = document.getElementById('current-password').value;
+    const new_password = document.getElementById('new-password').value;
+    
+    try {
+        const response = await fetch('/api/auth/password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ current_password, new_password })
+        });
+        
+        const result = await response.json();
+        if (response.ok) {
+            if (typeof showToast !== 'undefined') showToast('Password updated successfully', 'success');
+            document.getElementById('password-form').reset();
+        } else {
+            if (typeof showToast !== 'undefined') showToast(result.detail || 'Failed to update password', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+        input.type = "text";
+    } else {
+        input.type = "password";
+    }
+}
+</script>
+{% endblock %}

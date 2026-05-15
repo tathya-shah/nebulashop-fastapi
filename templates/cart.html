@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Cart - NebulaShop{% endblock %}
+{% block page_title %}Shopping Cart{% endblock %}
+{% block page_subtitle %}Review your selected items before checkout.{% endblock %}
+{% block header_actions %}<a class="btn btn-secondary" href="/">← Continue Shopping</a>{% endblock %}
+
+{% block content %}
+<section id="cart-page" class="cart-page">
+  <div id="cart-items" class="cart-list"></div>
+  <div id="cart-empty" class="cart-empty hidden">
+    <span class="cart-empty-icon">🛒</span>
+    <p>Your cart is empty</p>
+    <a href="/" class="btn btn-primary" style="margin-top:1rem;display:inline-flex;">Start Shopping</a>
+  </div>
+  <div id="cart-total" class="cart-total"></div>
+  <div class="cart-actions">
+    <button id="clear-cart-btn" class="btn btn-secondary">🗑️ Clear Cart</button>
+    <button id="checkout-btn" class="btn btn-primary">✓ Checkout</button>
+  </div>
+</section>
+{% endblock %}
