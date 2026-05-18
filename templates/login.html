@@ -1,26 +1,27 @@
 {% extends "base.html" %}
 
 {% block title %}Login - NebulaShop{% endblock %}
-{% block page_title %}Login{% endblock %}
-{% block page_subtitle %}Sign in to your account to track orders and checkout faster.{% endblock %}
+{% block page_kicker %}Account access{% endblock %}
+{% block page_title %}Welcome back{% endblock %}
+{% block page_subtitle %}Sign in to track orders, use saved details, and move through checkout faster.{% endblock %}
 
 {% block content %}
-<section id="login-page" style="max-width: 400px; margin: 0 auto;">
-  <form id="login-form" class="product-form">
-    <div class="form-group">
-      <label for="login-username">Username</label>
-      <input type="text" id="login-username" required placeholder="Enter username" />
-    </div>
-    <div class="form-group" style="position: relative;">
-      <label for="login-password">Password</label>
-      <input type="password" id="login-password" required placeholder="Enter password" />
-      <span class="toggle-password" onclick="togglePassword('login-password')" style="position: absolute; right: 10px; top: 38px; cursor: pointer;">👁️</span>
-    </div>
-    <button type="submit" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Sign In</button>
-  </form>
-  <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted);">
-    Don't have an account? <a href="/register" style="color: var(--primary);">Sign up here</a>
-  </p>
+<section id="login-page" class="auth-wrap">
+  <div class="auth-card">
+    <form id="login-form" class="product-form">
+      <div class="form-group">
+        <label for="login-username">Username</label>
+        <input type="text" id="login-username" required autocomplete="username" placeholder="Enter username" />
+      </div>
+      <div class="form-group password-field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" required autocomplete="current-password" placeholder="Enter password" />
+        <button class="toggle-password" onclick="togglePassword('login-password')" type="button" aria-label="Show or hide password">Show</button>
+      </div>
+      <button type="submit" class="btn btn-primary">Sign in</button>
+    </form>
+  </div>
+  <p class="auth-switch">New here? <a href="/register">Create an account</a></p>
 </section>
 
 <script>
@@ -28,6 +29,9 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in...';
     
     try {
         const response = await fetch('/api/auth/login', {
@@ -40,23 +44,26 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             window.location.href = '/';
         } else {
             const data = await response.json();
-            if (typeof showToast !== 'undefined') {
-                showToast(data.detail || 'Login failed', 'error');
-            } else {
-                alert(data.detail || 'Login failed');
-            }
+            if (typeof showToast !== 'undefined') showToast(data.detail || 'Login failed', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign in';
         }
     } catch (err) {
         console.error(err);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign in';
     }
 });
 
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
+    const button = input?.parentElement?.querySelector('.toggle-password');
     if (input.type === "password") {
         input.type = "text";
+        if (button) button.textContent = 'Hide';
     } else {
         input.type = "password";
+        if (button) button.textContent = 'Show';
     }
 }
 </script>

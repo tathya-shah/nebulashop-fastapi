@@ -4,6 +4,10 @@ function $(id) {
     return document.getElementById(id);
 }
 
+function initCartIcons() {
+    if (window.lucide) window.lucide.createIcons();
+}
+
 function showToast(message, type = 'info') {
     if (typeof window.showToast === 'function' && window.showToast !== showToast) {
         return window.showToast(message, type);
@@ -14,23 +18,14 @@ function showToast(message, type = 'info') {
     toast.innerText = message;
     document.body.appendChild(toast);
 
-    setTimeout(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateY(0)';
-    }, 10);
-
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(20px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+    setTimeout(() => toast.remove(), 3400);
 }
 
 async function fetchCart() {
     try {
         const response = await fetch(`${API_BASE}/cart`);
         if (!response.ok) {
-            // Handle unauthorized safely without redirect loop if in cart
             if (response.status === 401 && window.location.pathname === '/cart') {
                 window.location.href = '/login';
                 return null;
@@ -57,13 +52,12 @@ async function renderCart(cart) {
     if (!itemsEl || !totalEl) return;
 
     const items = cart?.items || [];
-    
     itemsEl.innerHTML = '';
     refreshCartBadge(cart);
 
     if (items.length === 0) {
         if (emptyEl) emptyEl.classList.remove('hidden');
-        totalEl.innerHTML = '<p>Total: $0.00</p>';
+        totalEl.innerHTML = '<div class="cart-total-amount"><span>Total</span><strong>$0.00</strong></div>';
         return;
     }
 
@@ -71,7 +65,7 @@ async function renderCart(cart) {
 
     items.forEach((item, idx) => {
         const specsText = Object.entries(item.selected_specs || {}).map(([k, v]) => `${v}`).join(' | ');
-        const specHtml = specsText ? `<p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0;">${specsText}</p>` : '';
+        const specHtml = specsText ? `<p class="cart-item-specs">${specsText}</p>` : '';
 
         const row = document.createElement('div');
         row.className = 'cart-item stagger-' + Math.min(idx + 1, 6);
@@ -79,17 +73,17 @@ async function renderCart(cart) {
             <div class="cart-item-main">
                 <h4>${item.name}</h4>
                 ${specHtml}
-                <p>$${Number(item.price).toFixed(2)} × ${item.quantity}</p>
+                <p>$${Number(item.price).toFixed(2)} x ${item.quantity}</p>
             </div>
             <div class="cart-item-controls">
-                <button class="qty-btn qty-minus" type="button" data-decrease="${item.item_id}">−</button>
-                <input type="number" class="cart-qty-input" value="${item.quantity}" min="1" readonly>
-                <button class="qty-btn qty-plus" type="button" data-increase="${item.item_id}">+</button>
+                <button class="qty-btn qty-minus" type="button" data-decrease="${item.item_id}" aria-label="Decrease ${item.name} quantity">-</button>
+                <input type="number" class="cart-qty-input" value="${item.quantity}" min="1" readonly aria-label="${item.name} quantity">
+                <button class="qty-btn qty-plus" type="button" data-increase="${item.item_id}" aria-label="Increase ${item.name} quantity">+</button>
             </div>
             <div class="cart-item-subtotal">
                 $${Number(item.subtotal).toFixed(2)}
             </div>
-            <button class="btn btn-danger btn-small" type="button" data-remove="${item.item_id}">Remove</button>
+            <button class="btn btn-secondary btn-small" type="button" data-remove="${item.item_id}"><i data-lucide="trash-2" aria-hidden="true"></i> Remove</button>
         `;
 
         row.querySelector(`[data-increase]`).addEventListener('click', () => handleIncreaseQty(item.item_id, item.quantity));
@@ -99,7 +93,8 @@ async function renderCart(cart) {
         itemsEl.appendChild(row);
     });
 
-    totalEl.innerHTML = `<div class="cart-total-amount"><strong>Total: $${Number(cart.total || 0).toFixed(2)}</strong></div>`;
+    totalEl.innerHTML = `<div class="cart-total-amount"><span>Total</span><strong>$${Number(cart.total || 0).toFixed(2)}</strong></div>`;
+    initCartIcons();
 }
 
 async function handleIncreaseQty(itemId, currentQty) {
@@ -149,7 +144,7 @@ async function handleRemove(itemId) {
             showToast(result.detail || 'Failed to remove item', 'error');
         }
     } catch (error) {
-        console.error('Error removing item:', error);
+        console.error('Error removing cart item:', error);
         showToast('Failed to remove item', 'error');
     }
 }
@@ -177,13 +172,10 @@ async function handleCheckout() {
 
 function bindCartActions() {
     const clearBtn = $('clear-cart-btn');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', clearCart);
-    }
+    if (clearBtn) clearBtn.addEventListener('click', clearCart);
+
     const checkoutBtn = $('checkout-btn');
-    if (checkoutBtn) {
-        checkoutBtn.addEventListener('click', handleCheckout);
-    }
+    if (checkoutBtn) checkoutBtn.addEventListener('click', handleCheckout);
 }
 
 function refreshCartBadge(cart) {
@@ -204,6 +196,7 @@ function refreshCartBadge(cart) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    initCartIcons();
     if (window.location.pathname === '/cart') {
         loadCart();
         bindCartActions();

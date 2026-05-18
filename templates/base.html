@@ -3,69 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="NebulaShop — Premium e-commerce store with fast shopping and clear sections." />
-  <title>{% block title %}Ecommerce{% endblock %}</title>
+  <meta name="description" content="NebulaShop, a polished commerce and catalog management experience." />
+  <title>{% block title %}NebulaShop{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='professional-light.css') }}" />
 </head>
-<body>
-  <button class="mobile-toggle" id="mobile-toggle" aria-label="Open menu">☰</button>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+<body class="{% if current_user.is_authenticated and current_user.is_admin %}is-admin{% else %}is-shopper{% endif %}">
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="/" aria-label="NebulaShop home">
+          <span class="brand-mark"><i data-lucide="shopping-bag" aria-hidden="true"></i></span>
+          <span>
+            <span class="brand-name">NebulaShop</span>
+            <span class="brand-tagline">{% if current_user.is_authenticated and current_user.is_admin %}Operations console{% else %}Premium tech marketplace{% endif %}</span>
+          </span>
+        </a>
 
-  <div class="layout-shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand-panel">
-        <div class="brand-icon">🛍️</div>
-        <div>
-          <h1 class="brand-name">NebulaShop</h1>
-          <p class="brand-tagline">Premium shopping experience</p>
-        </div>
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a class="nav-link" href="/" data-path="/"><i data-lucide="store" aria-hidden="true"></i> Shop</a>
+          {% if current_user.is_authenticated %}
+            {% if current_user.is_admin %}
+              <a class="nav-link" href="/admin" data-path="/admin"><i data-lucide="layout-dashboard" aria-hidden="true"></i> Admin</a>
+            {% else %}
+              <a class="nav-link" href="/cart" data-path="/cart">
+                <i data-lucide="shopping-cart" aria-hidden="true"></i> Cart <span class="cart-badge hidden" id="cart-count">0</span>
+              </a>
+              <a class="nav-link" href="/orders" data-path="/orders"><i data-lucide="package-check" aria-hidden="true"></i> Orders</a>
+            {% endif %}
+          {% endif %}
+        </nav>
+
+        <nav class="account-nav" aria-label="Account navigation">
+          {% if current_user.is_authenticated %}
+            <a class="nav-link" href="/profile" data-path="/profile"><i data-lucide="user-round" aria-hidden="true"></i> {{ current_user.username }}</a>
+          {% else %}
+            <a class="nav-link" href="/login" data-path="/login"><i data-lucide="log-in" aria-hidden="true"></i> Sign in</a>
+            <a class="btn btn-primary btn-small" href="/register" data-path="/register"><i data-lucide="user-plus" aria-hidden="true"></i> Create account</a>
+          {% endif %}
+        </nav>
+
+        <button class="mobile-toggle" id="mobile-toggle" aria-label="Open menu" aria-expanded="false" type="button">
+          <span class="mobile-toggle-lines" aria-hidden="true"></span>
+        </button>
       </div>
+    </header>
 
-      <nav class="sidebar-nav">
-        <a class="sidebar-link" href="/" data-path="/">
-          <span class="nav-icon">🏠</span> Home
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="mobile-drawer" id="sidebar" aria-label="Mobile navigation">
+      <div class="mobile-drawer-head">
+        <a class="brand" href="/">
+          <span class="brand-mark"><i data-lucide="shopping-bag" aria-hidden="true"></i></span>
+          <span>
+            <span class="brand-name">NebulaShop</span>
+            <span class="brand-tagline">Fast paths, clear choices</span>
+          </span>
         </a>
+        <button class="mobile-close" id="mobile-close" type="button" aria-label="Close menu">&times;</button>
+      </div>
+      <nav class="mobile-drawer-nav">
+        <a class="mobile-nav-link" href="/" data-path="/"><i data-lucide="store" aria-hidden="true"></i> Shop</a>
         {% if current_user.is_authenticated %}
-        {% if not current_user.is_admin %}
-        <a class="sidebar-link" href="/cart" data-path="/cart">
-          <span class="nav-icon">🛒</span> Cart
-          <span class="cart-badge hidden" id="cart-count">0</span>
-        </a>
-        <a class="sidebar-link" href="/orders" data-path="/orders">
-          <span class="nav-icon">📦</span> Orders
-        </a>
+          {% if current_user.is_admin %}
+            <a class="mobile-nav-link" href="/admin" data-path="/admin"><i data-lucide="layout-dashboard" aria-hidden="true"></i> Admin</a>
+          {% else %}
+            <a class="mobile-nav-link" href="/cart" data-path="/cart"><i data-lucide="shopping-cart" aria-hidden="true"></i> Cart</a>
+            <a class="mobile-nav-link" href="/orders" data-path="/orders"><i data-lucide="package-check" aria-hidden="true"></i> Orders</a>
+          {% endif %}
+          <a class="mobile-nav-link" href="/profile" data-path="/profile"><i data-lucide="user-round" aria-hidden="true"></i> Profile</a>
         {% else %}
-        <a class="sidebar-link" href="/admin" data-path="/admin">
-          <span class="nav-icon">⚙️</span> Admin
-        </a>
-        {% endif %}
-        <a class="sidebar-link" href="/profile" data-path="/profile">
-          <span class="nav-icon">👤</span> Profile
-        </a>
-        {% else %}
-        <a class="sidebar-link" href="/login" data-path="/login">
-          <span class="nav-icon">🔑</span> Login
-        </a>
-        <a class="sidebar-link" href="/register" data-path="/register">
-          <span class="nav-icon">📝</span> Sign Up
-        </a>
+          <a class="mobile-nav-link" href="/login" data-path="/login"><i data-lucide="log-in" aria-hidden="true"></i> Sign in</a>
+          <a class="mobile-nav-link" href="/register" data-path="/register"><i data-lucide="user-plus" aria-hidden="true"></i> Create account</a>
         {% endif %}
       </nav>
-
-      <div class="sidebar-panel">
-        <h3>Categories</h3>
-        <div id="category-buttons" class="filter-group"></div>
-      </div>
     </aside>
 
     <div class="content-wrapper">
       <header class="page-header">
         <div>
+          <p class="page-kicker">{% block page_kicker %}{% if current_user.is_authenticated and current_user.is_admin %}Control room{% else %}Curated commerce{% endif %}{% endblock %}</p>
           <h2>{% block page_title %}Welcome{% endblock %}</h2>
-          <p class="page-subtitle">{% block page_subtitle %}Browse products, view cart and manage catalog.{% endblock %}</p>
+          <p class="page-subtitle">{% block page_subtitle %}Browse products, manage orders, and keep every step clear.{% endblock %}</p>
         </div>
         <div class="page-actions">{% block header_actions %}{% endblock %}</div>
       </header>
@@ -74,20 +95,25 @@
         {% block content %}{% endblock %}
       </main>
     </div>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <span>&copy; {{ year or 2026 }} NebulaShop</span>
+        <span>Commerce experience powered by the existing backend.</span>
+      </div>
+    </footer>
   </div>
 
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div>© {{ year or 2026 }} NebulaShop. Built with FastAPI + Flask.</div>
-    </div>
-  </footer>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <div id="toast" class="toast hidden"></div>
-
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="{{ url_for('static', filename='cart.js') }}"></script>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{{ url_for('static', filename='admin.js') }}"></script>
+  <script>
+    if (window.lucide) window.lucide.createIcons();
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

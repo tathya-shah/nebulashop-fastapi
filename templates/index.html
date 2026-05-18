@@ -1,24 +1,26 @@
 {% extends "base.html" %}
 {% block title %}Shop - NebulaShop{% endblock %}
-{% block page_title %}Shop Products{% endblock %}
-{% block page_subtitle %}Browse inventory with animated filters and quick add-to-cart actions.{% endblock %}
+{% block page_title %}Shop smarter, choose faster{% endblock %}
+{% block page_subtitle %}Search the catalog, compare stock at a glance, and move from discovery to checkout without losing context.{% endblock %}
 
 {% block content %}
 <section id="home-page" class="home-page">
-  <div class="search-panel">
-    <label for="search" class="search-label">Search by product name</label>
-    <div class="search-input-group">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="search" placeholder="Search products by name..." />
-      <div id="suggestion-box" class="suggestions hidden"></div>
+  <div class="shop-command">
+    <div class="search-panel">
+      <label for="search" class="search-label">Search products</label>
+      <div class="search-input-group">
+        <span class="search-icon" aria-hidden="true"><i data-lucide="search"></i></span>
+        <input type="text" id="search" autocomplete="off" placeholder="Try MacBook, iPhone, laptop, storage..." />
+        <div id="suggestion-box" class="suggestions hidden"></div>
+      </div>
     </div>
+    <div id="category-buttons" class="filter-group" aria-label="Product categories"></div>
   </div>
 
-  <div id="product-list" class="product-grid"></div>
+  <div id="product-list" class="product-grid" aria-live="polite"></div>
 
   <script>
     window.IS_ADMIN = {{ 'true' if current_user.is_authenticated and current_user.is_admin else 'false' }};
   </script>
 </section>
 {% endblock %}
-

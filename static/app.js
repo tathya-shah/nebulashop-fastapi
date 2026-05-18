@@ -2,23 +2,42 @@ var API_BASE = '/api';
 let allProducts = [];
 let selectedCategory = 'all';
 let searchTimeout = null;
-const categoryIcons = {
-  Laptops: '💻',
-  Phones: '📱',
-  Headphones: '🎧',
-  Tablets: '🛍️',
-  Smartwatches: '⌚',
-  General: '🛍️'
+let toastTimeoutId = null;
+
+const categoryTokens = {
+    Laptops: 'LP',
+    Phones: 'PH',
+    Headphones: 'HP',
+    Tablets: 'TB',
+    Smartwatches: 'SW',
+    General: 'NS'
 };
 
-// Toast Notification System
-let toastTimeoutId = null;
+function $(id) {
+    return document.getElementById(id);
+}
+
+function initIcons() {
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function createToastElement() {
-    let toast = document.getElementById('toast');
+    let toast = $('toast');
     if (!toast) {
         toast = document.createElement('div');
         toast.id = 'toast';
         toast.className = 'toast hidden';
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
         document.body.appendChild(toast);
     }
     return toast;
@@ -35,15 +54,10 @@ function showToast(message, type = 'info') {
     }[type] || 'Notification';
 
     toast.textContent = text || fallbackText;
-    toast.classList.remove('hidden', 'success', 'error', 'warning', 'info');
-    toast.classList.add('toast', type);
-    toast.setAttribute('role', 'status');
-    toast.setAttribute('aria-live', 'polite');
-    toast.classList.remove('hidden');
+    toast.className = `toast ${type}`;
 
     if (toastTimeoutId) {
         clearTimeout(toastTimeoutId);
-        toastTimeoutId = null;
     }
 
     toastTimeoutId = setTimeout(() => {
@@ -52,22 +66,12 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Utility function
-function $(id) {
-    return document.getElementById(id);
-}
-
-// ── UI Enhancements ──
-
 function highlightActiveNav() {
     const path = window.location.pathname;
-    document.querySelectorAll('.sidebar-link').forEach(link => {
+    document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
         const linkPath = link.getAttribute('data-path');
-        if (linkPath === path) {
-            link.classList.add('active');
-        } else {
-            link.classList.remove('active');
-        }
+        const isActive = linkPath === path || (linkPath !== '/' && path.startsWith(linkPath + '/'));
+        link.classList.toggle('active', isActive);
     });
 }
 
@@ -75,19 +79,34 @@ function setupMobileMenu() {
     const toggle = $('mobile-toggle');
     const sidebar = $('sidebar');
     const overlay = $('sidebar-overlay');
+    const close = $('mobile-close');
     if (!toggle || !sidebar) return;
 
+    const openMenu = () => {
+        sidebar.classList.add('open');
+        overlay?.classList.add('active');
+        document.body.classList.add('menu-open');
+        toggle.setAttribute('aria-expanded', 'true');
+    };
+
+    const closeMenu = () => {
+        sidebar.classList.remove('open');
+        overlay?.classList.remove('active');
+        document.body.classList.remove('menu-open');
+        toggle.setAttribute('aria-expanded', 'false');
+    };
+
     toggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        if (overlay) overlay.classList.toggle('active');
+        if (sidebar.classList.contains('open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
     });
 
-    if (overlay) {
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-        });
-    }
+    overlay?.addEventListener('click', closeMenu);
+    close?.addEventListener('click', closeMenu);
+    document.querySelectorAll('.mobile-nav-link').forEach(link => link.addEventListener('click', closeMenu));
 }
 
 function updateCartBadge() {
@@ -109,12 +128,11 @@ function updateCartBadge() {
         .catch(() => {});
 }
 
-// ── Init ──
-
 document.addEventListener('DOMContentLoaded', () => {
     highlightActiveNav();
     setupMobileMenu();
     updateCartBadge();
+    initIcons();
 
     if ($('category-buttons')) {
         loadCategories();
@@ -131,7 +149,7 @@ async function loadCategories() {
         const response = await fetch(`${API_BASE}/categories`);
         if (!response.ok) throw new Error('Failed to load categories');
         const data = await response.json();
-        displayCategories(data.categories);
+        displayCategories(data.categories || []);
     } catch (error) {
         console.error('Error loading categories:', error);
     }
@@ -139,27 +157,40 @@ async function loadCategories() {
 
 function displayCategories(categories) {
     const container = $('category-buttons');
-    
     if (!container) return;
+
     container.innerHTML = '';
 
     const allBtn = document.createElement('button');
     allBtn.type = 'button';
     allBtn.className = 'filter-btn active';
-    allBtn.innerHTML = `<span class="filter-icon">✨</span> All`;
+    allBtn.innerHTML = '<i data-lucide="sparkles" aria-hidden="true"></i> All';
     allBtn.setAttribute('data-category', 'all');
     container.appendChild(allBtn);
 
     categories.forEach(category => {
-        const icon = categoryIcons[category] || '🛍️';
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'filter-btn';
-        btn.innerHTML = `<span class="filter-icon">${icon}</span> ${category}`;
+        btn.innerHTML = `<i data-lucide="${categoryIconName(category)}" aria-hidden="true"></i> ${escapeHtml(category)}`;
         btn.setAttribute('data-category', category);
         container.appendChild(btn);
     });
+
     attachCategoryListeners();
+    initIcons();
+}
+
+function categoryIconName(category) {
+    const map = {
+        Laptops: 'laptop',
+        Phones: 'smartphone',
+        Headphones: 'headphones',
+        Tablets: 'tablet',
+        Smartwatches: 'watch',
+        General: 'package'
+    };
+    return map[category] || 'tag';
 }
 
 function attachCategoryListeners() {
@@ -171,32 +202,31 @@ function attachCategoryListeners() {
     });
 }
 
-function filterByCategory(category, page = 'home') {
+function filterByCategory(category) {
     selectedCategory = category;
-    const buttons = document.querySelectorAll('.filter-btn');
-    buttons.forEach(btn => {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-category') === category);
     });
     
     if (category === 'all') {
         displayProducts(allProducts);
     } else {
-        const filtered = allProducts.filter(p => p.category.toLowerCase() === category.toLowerCase());
+        const filtered = allProducts.filter(p => String(p.category).toLowerCase() === category.toLowerCase());
         displayProducts(filtered);
     }
 }
 
 async function loadProducts() {
+    const container = $('product-list');
     try {
-        const container = $('product-list');
         if (container) {
             container.innerHTML = Array(6).fill(`
-                <div class="product-card">
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-media"></div>
                     <div class="skeleton skeleton-title"></div>
                     <div class="skeleton skeleton-text"></div>
-                    <div class="skeleton skeleton-text" style="width: 80%"></div>
-                    <div class="skeleton skeleton-price" style="margin-top: 1rem;"></div>
-                    <div class="skeleton skeleton-button" style="margin-top: 1.5rem;"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-price"></div>
                 </div>
             `).join('');
         }
@@ -211,6 +241,9 @@ async function loadProducts() {
         }
     } catch (error) {
         console.error('Error loading products:', error);
+        if (container) {
+            container.innerHTML = '<div class="empty-state"><span class="empty-state-icon">!</span><p>Failed to load products.</p></div>';
+        }
         showToast('Failed to load products', 'error');
     }
 }
@@ -220,62 +253,59 @@ function displayProducts(products) {
     if (!container) return;
     
     container.innerHTML = '';
-    if (products.length === 0) {
-        container.innerHTML = '<div class="empty-state"><span class="empty-state-icon">🔍</span><p>No products found</p></div>';
+    if (!products.length) {
+        container.innerHTML = '<div class="empty-state"><span class="empty-state-icon">0</span><p>No products found.</p></div>';
         return;
     }
     
     products.forEach((product, idx) => {
-        const div = document.createElement('div');
+        const div = document.createElement('article');
         div.className = 'product-card stagger-' + Math.min(idx + 1, 6);
         
         const stockToUse = product.total_stock !== undefined ? product.total_stock : (product.display_stock !== undefined ? product.display_stock : product.stock);
         const stockStatus = stockToUse <= 0 ? 'out-of-stock' : stockToUse <= 5 ? 'low-stock' : 'in-stock';
-        const stockText = stockToUse <= 0 ? 'Out of Stock' : stockToUse <= 5 ? `Only ${stockToUse} left` : 'In Stock';
-        const icon = categoryIcons[product.category] || categoryIcons.General;
-        const descSnippet = product.description ? (product.description.length > 60 ? product.description.substring(0, 60) + '...' : product.description) : 'No description available.';
+        const stockText = stockToUse <= 0 ? 'Out of stock' : stockToUse <= 5 ? `Only ${stockToUse} left` : 'In stock';
+        const token = categoryTokens[product.category] || String(product.name || 'NS').slice(0, 2).toUpperCase();
+        const descSnippet = product.description ? (product.description.length > 72 ? product.description.substring(0, 72) + '...' : product.description) : 'A curated NebulaShop item with fast checkout support.';
         
         const hasVariants = product.variants && product.variants.length > 0;
         const isVariablePrice = hasVariants && product.variants.some(v => v.price !== product.price);
         const finalDisplayPrice = product.display_price !== undefined ? product.display_price : product.price;
+        const rating = Number(product.rating || 4.5).toFixed(1);
         
         div.innerHTML = `
-            <div class="product-badge top-right">
-                <span class="rating-star">⭐</span> ${product.rating || '4.5'}
+            <div class="product-media">
+                <span class="product-media-token"><i data-lucide="${categoryIconName(product.category)}" aria-hidden="true"></i></span>
             </div>
-            <div class="product-header" style="display: flex; align-items: flex-start; justify-content: space-between;">
-                <div>
-                    <h3 style="margin-bottom: 0.25rem;">${product.name}</h3>
-                    <span class="category-badge">${icon} ${product.category}</span>
+            <span class="status-pill product-badge top-right"><i data-lucide="star" aria-hidden="true"></i>${rating}</span>
+            <div class="product-body">
+                <div class="product-header">
+                    <span class="category-badge">${escapeHtml(product.category || 'General')}</span>
+                    <h3>${escapeHtml(product.name)}</h3>
+                </div>
+                <p class="product-description">${escapeHtml(descSnippet)}</p>
+                <div class="product-info">
+                    <div>
+                        <p class="product-price">$${Number(finalDisplayPrice || 0).toFixed(2)}</p>
+                        ${isVariablePrice ? `<span class="price-note">Variants from $${Number(product.min_price).toFixed(2)}</span>` : ''}
+                    </div>
+                    <p class="stock-status ${stockStatus}">${stockText}</p>
+                </div>
+                <div class="product-footer">
+                    <a href="/product/${product.id}" class="btn btn-primary">View details <i data-lucide="arrow-right" aria-hidden="true"></i></a>
                 </div>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 1rem 0; min-height: 40px;">
-                ${descSnippet.replace(/</g, '&lt;')}
-            </p>
-            <div class="product-info" style="margin-bottom: 1.5rem;">
-                <p class="product-price" style="font-size: 1.5rem;">
-                    $${Number(finalDisplayPrice).toFixed(2)}
-                    ${isVariablePrice ? '<span style="font-size: 0.75rem; color: var(--accent); margin-left: 0.5rem;">(Variants from $' + Number(product.min_price).toFixed(2) + ')</span>' : ''}
-                </p>
-                <p class="stock-status ${stockStatus}" style="font-size: 0.8rem;">${stockText}</p>
-            </div>
-            <div class="product-footer" style="display: block; margin-top: auto;">
-                <a href="/product/${product.id}" class="btn btn-primary" style="display: block; text-align: center; text-decoration: none;">View Details</a>
-            </div>
         `;
-        div.style.display = 'flex';
-        div.style.flexDirection = 'column';
         container.appendChild(div);
     });
+    initIcons();
 }
 
 function increaseQty(productId, maxStock) {
     const input = $(`qty-${productId}`);
     if (input) {
         let val = parseInt(input.value) || 1;
-        if (val < maxStock) {
-            input.value = val + 1;
-        }
+        if (val < maxStock) input.value = val + 1;
     }
 }
 
@@ -283,9 +313,7 @@ function decreaseQty(productId) {
     const input = $(`qty-${productId}`);
     if (input) {
         let val = parseInt(input.value) || 1;
-        if (val > 1) {
-            input.value = val - 1;
-        }
+        if (val > 1) input.value = val - 1;
     }
 }
 
@@ -307,7 +335,7 @@ async function addToCart(productId) {
         });
         
         if (response.ok) {
-            showToast('Added to cart!', 'success');
+            showToast('Added to cart', 'success');
             qtyInput.value = '1';
             updateCartBadge();
             setTimeout(() => {
@@ -337,7 +365,7 @@ function setupSearch() {
             } else {
                 liveSearch(query);
             }
-        }, 200);
+        }, 180);
     });
 
     document.addEventListener('click', event => {
@@ -388,9 +416,7 @@ function displaySuggestions(products) {
 
 function hideSuggestions() {
     const box = $('suggestion-box');
-    if (box) {
-        box.classList.add('hidden');
-    }
+    if (box) box.classList.add('hidden');
 }
 
 function setupProductForm() {
@@ -416,34 +442,23 @@ async function addProduct() {
     const stock = parseInt(stockInput.value, 10);
     const category = categoryInput?.value?.trim() || 'General';
 
-    if (!name) {
-        showToast('Please enter a product name', 'warning');
-        return;
-    }
-    if (isNaN(price) || price < 0) {
-        showToast('Please enter a valid price', 'warning');
-        return;
-    }
-    if (isNaN(stock) || stock < 0) {
-        showToast('Please enter a valid stock quantity', 'warning');
-        return;
-    }
-
-    const nextId = allProducts.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+    if (!name) return showToast('Please enter a product name', 'warning');
+    if (isNaN(price) || price < 0) return showToast('Please enter a valid price', 'warning');
+    if (isNaN(stock) || stock < 0) return showToast('Please enter a valid stock quantity', 'warning');
 
     try {
         const response = await fetch(`${API_BASE}/products`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: nextId, name, price, stock, category })
+            body: JSON.stringify({ name, price, stock, category })
         });
 
         if (response.ok) {
-            showToast('Product added successfully!', 'success');
+            showToast('Product added successfully', 'success');
             nameInput.value = '';
             priceInput.value = '';
             stockInput.value = '';
-            categoryInput.value = '';
+            if (categoryInput) categoryInput.value = '';
             await loadProducts();
             await loadCategories();
         } else {
@@ -456,21 +471,20 @@ async function addProduct() {
     }
 }
 
-
 async function checkout() {
     try {
         const response = await fetch(`${API_BASE}/checkout`, { method: 'POST' });
         const result = await response.json();
         if (response.ok) {
-            alert(`Order placed successfully! Order ID: ${result.order.id}`);
-            loadCart();
+            showToast(`Order placed successfully. Order ID: ${result.order_id || result.order?.id}`, 'success');
+            if (typeof loadCart === 'function') loadCart();
             loadProducts();
         } else {
-            alert(result.detail || 'Failed to checkout');
+            showToast(result.detail || 'Failed to checkout', 'error');
         }
     } catch (error) {
         console.error('Error during checkout:', error);
-        alert('Failed to checkout.');
+        showToast('Failed to checkout', 'error');
     }
 }
 
@@ -482,35 +496,7 @@ async function loadOrders() {
         displayOrders(orders);
     } catch (error) {
         console.error('Error loading orders:', error);
-        const list = document.getElementById('orders-list');
-        if (list) list.innerHTML = '<p>Failed to load orders.</p>';
+        const list = $('orders-list');
+        if (list) list.innerHTML = '<div class="empty-state"><span class="empty-state-icon">!</span><p>Failed to load orders.</p></div>';
     }
-}
-
-function displayOrders(orders) {
-    const container = document.getElementById('orders-list');
-    if (!container) return;
-
-    container.innerHTML = '';
-    if (!orders.length) {
-        container.innerHTML = '<p>No orders executed yet.</p>';
-        return;
-    }
-
-    orders.forEach(order => {
-        const div = document.createElement('div');
-        div.className = 'order-card';
-        const itemsHtml = order.items.map(item => `
-            <div class="order-item">
-                <span>${item.product_id}</span>
-                <span>Qty: ${item.quantity}</span>
-            </div>
-        `).join('');
-        div.innerHTML = `
-            <h3>Order #${order.id}</h3>
-            <div class="order-items">${itemsHtml}</div>
-            <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
-        `;
-        container.appendChild(div);
-    });
 }

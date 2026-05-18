@@ -1,26 +1,27 @@
 {% extends "base.html" %}
 
 {% block title %}Register - NebulaShop{% endblock %}
-{% block page_title %}Create Account{% endblock %}
-{% block page_subtitle %}Join NebulaShop to track your orders and checkout seamlessly.{% endblock %}
+{% block page_kicker %}New account{% endblock %}
+{% block page_title %}Create your NebulaShop profile{% endblock %}
+{% block page_subtitle %}A profile keeps orders, shipping preferences, and checkout details in one place.{% endblock %}
 
 {% block content %}
-<section id="register-page" style="max-width: 400px; margin: 0 auto;">
-  <form id="register-form" class="product-form">
-    <div class="form-group">
-      <label for="register-username">Username</label>
-      <input type="text" id="register-username" required placeholder="Choose a username" />
-    </div>
-    <div class="form-group" style="position: relative;">
-      <label for="register-password">Password</label>
-      <input type="password" id="register-password" required placeholder="Create a strong password" />
-      <span class="toggle-password" onclick="togglePassword('register-password')" style="position: absolute; right: 10px; top: 38px; cursor: pointer;">👁️</span>
-    </div>
-    <button type="submit" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Sign Up</button>
-  </form>
-  <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted);">
-    Already have an account? <a href="/login" style="color: var(--primary);">Sign in here</a>
-  </p>
+<section id="register-page" class="auth-wrap">
+  <div class="auth-card">
+    <form id="register-form" class="product-form">
+      <div class="form-group">
+        <label for="register-username">Username</label>
+        <input type="text" id="register-username" required autocomplete="username" placeholder="Choose a username" />
+      </div>
+      <div class="form-group password-field">
+        <label for="register-password">Password</label>
+        <input type="password" id="register-password" required autocomplete="new-password" placeholder="Create a strong password" />
+        <button class="toggle-password" onclick="togglePassword('register-password')" type="button" aria-label="Show or hide password">Show</button>
+      </div>
+      <button type="submit" class="btn btn-primary">Create account</button>
+    </form>
+  </div>
+  <p class="auth-switch">Already have an account? <a href="/login">Sign in</a></p>
 </section>
 
 <script>
@@ -28,6 +29,9 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
     e.preventDefault();
     const username = document.getElementById('register-username').value;
     const password = document.getElementById('register-password').value;
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account...';
     
     try {
         const response = await fetch('/api/auth/register', {
@@ -40,23 +44,26 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
             window.location.href = '/';
         } else {
             const data = await response.json();
-            if (typeof showToast !== 'undefined') {
-                showToast(data.detail || 'Registration failed', 'error');
-            } else {
-                alert(data.detail || 'Registration failed');
-            }
+            if (typeof showToast !== 'undefined') showToast(data.detail || 'Registration failed', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create account';
         }
     } catch (err) {
         console.error(err);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create account';
     }
 });
 
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
+    const button = input?.parentElement?.querySelector('.toggle-password');
     if (input.type === "password") {
         input.type = "text";
+        if (button) button.textContent = 'Hide';
     } else {
         input.type = "password";
+        if (button) button.textContent = 'Show';
     }
 }
 </script>

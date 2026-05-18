@@ -1,22 +1,38 @@
 {% extends "base.html" %}
 
 {% block title %}Cart - NebulaShop{% endblock %}
-{% block page_title %}Shopping Cart{% endblock %}
-{% block page_subtitle %}Review your selected items before checkout.{% endblock %}
-{% block header_actions %}<a class="btn btn-secondary" href="/">← Continue Shopping</a>{% endblock %}
+{% block page_kicker %}Step 1 of 3{% endblock %}
+{% block page_title %}Review your cart{% endblock %}
+{% block page_subtitle %}Tune quantities, confirm variants, and continue to checkout when everything looks right.{% endblock %}
+{% block header_actions %}<a class="btn btn-secondary" href="/"><i data-lucide="arrow-left" aria-hidden="true"></i> Continue shopping</a>{% endblock %}
 
 {% block content %}
+<div class="stepper" aria-label="Checkout progress">
+  <span class="step active">Cart</span>
+  <span class="step">Checkout</span>
+  <span class="step">Confirmation</span>
+</div>
+
 <section id="cart-page" class="cart-page">
-  <div id="cart-items" class="cart-list"></div>
-  <div id="cart-empty" class="cart-empty hidden">
-    <span class="cart-empty-icon">🛒</span>
-    <p>Your cart is empty</p>
-    <a href="/" class="btn btn-primary" style="margin-top:1rem;display:inline-flex;">Start Shopping</a>
+  <div>
+    <div id="cart-items" class="cart-list" aria-live="polite"></div>
+    <div id="cart-empty" class="cart-empty hidden">
+      <span class="cart-empty-icon"><i data-lucide="shopping-cart" aria-hidden="true"></i></span>
+      <p>Your cart is empty.</p>
+      <a href="/" class="btn btn-primary">Start shopping</a>
+    </div>
   </div>
-  <div id="cart-total" class="cart-total"></div>
-  <div class="cart-actions">
-    <button id="clear-cart-btn" class="btn btn-secondary">🗑️ Clear Cart</button>
-    <button id="checkout-btn" class="btn btn-primary">✓ Checkout</button>
-  </div>
+
+  <aside class="cart-summary card" aria-label="Cart summary">
+    <div>
+      <h3>Order snapshot</h3>
+      <p class="muted">Taxes and shipping are calculated on the next step.</p>
+    </div>
+    <div id="cart-total" class="cart-total"></div>
+    <div class="cart-actions">
+      <button id="checkout-btn" class="btn btn-primary" type="button"><i data-lucide="credit-card" aria-hidden="true"></i> Checkout</button>
+      <button id="clear-cart-btn" class="btn btn-secondary" type="button"><i data-lucide="trash-2" aria-hidden="true"></i> Clear cart</button>
+    </div>
+  </aside>
 </section>
 {% endblock %}

@@ -1,45 +1,43 @@
 {% extends "base.html" %}
 
 {% block title %}My Profile - NebulaShop{% endblock %}
-{% block page_title %}My Profile{% endblock %}
-{% block page_subtitle %}Manage your shipping address and payment preferences.{% endblock %}
+{% block page_kicker %}Account settings{% endblock %}
+{% block page_title %}Profile and preferences{% endblock %}
+{% block page_subtitle %}Keep shipping and payment defaults ready for a faster, more predictable checkout flow.{% endblock %}
 
 {% block content %}
-<section id="profile-page" style="max-width: 600px; margin: 0 auto;">
+<section id="profile-page" class="profile-layout">
   <form id="profile-form" class="product-form">
+    <h3>Checkout defaults</h3>
     <div class="form-group">
       <label for="profile-username">Username</label>
       <input type="text" id="profile-username" value="{{ current_user.username }}" />
     </div>
-    <div class="form-group" style="margin-top: 1rem;">
-      <label for="profile-address">Shipping Address</label>
+    <div class="form-group">
+      <label for="profile-address">Shipping address</label>
       <input type="text" id="profile-address" value="{{ current_user.address or '' }}" placeholder="123 Main St, City, Country" />
     </div>
-    <div class="form-group" style="margin-top: 1rem;">
-      <label for="profile-payment">Payment Preference</label>
-      <input type="text" id="profile-payment" value="{{ current_user.payment_preference or '' }}" placeholder="e.g. Visa ending in 4242" />
+    <div class="form-group">
+      <label for="profile-payment">Payment preference</label>
+      <input type="text" id="profile-payment" value="{{ current_user.payment_preference or '' }}" placeholder="Example: Visa ending in 4242" />
     </div>
-    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-      <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
-      <button type="button" id="logout-btn" class="btn btn-danger" style="flex: 1;">Logout</button>
-    </div>
+    <button type="submit" class="btn btn-primary">Save changes</button>
+    <button type="button" id="logout-btn" class="btn btn-secondary">Logout</button>
   </form>
 
-  <form id="password-form" class="product-form" style="margin-top: 2rem;">
-    <h3 style="margin-top: 0;">Change Password</h3>
-    <div class="form-group password-group" style="position: relative;">
-      <label for="current-password">Current Password</label>
-      <input type="password" id="current-password" required />
-      <span class="toggle-password" onclick="togglePassword('current-password')" style="position: absolute; right: 10px; top: 38px; cursor: pointer;">👁️</span>
+  <form id="password-form" class="product-form">
+    <h3>Security</h3>
+    <div class="form-group password-field">
+      <label for="current-password">Current password</label>
+      <input type="password" id="current-password" required autocomplete="current-password" />
+      <button class="toggle-password" onclick="togglePassword('current-password')" type="button" aria-label="Show or hide current password">Show</button>
     </div>
-    <div class="form-group password-group" style="margin-top: 1rem; position: relative;">
-      <label for="new-password">New Password</label>
-      <input type="password" id="new-password" required minlength="6" />
-      <span class="toggle-password" onclick="togglePassword('new-password')" style="position: absolute; right: 10px; top: 38px; cursor: pointer;">👁️</span>
+    <div class="form-group password-field">
+      <label for="new-password">New password</label>
+      <input type="password" id="new-password" required minlength="6" autocomplete="new-password" />
+      <button class="toggle-password" onclick="togglePassword('new-password')" type="button" aria-label="Show or hide new password">Show</button>
     </div>
-    <div style="margin-top: 1.5rem;">
-      <button type="submit" class="btn btn-secondary" style="width: 100%;">Update Password</button>
-    </div>
+    <button type="submit" class="btn btn-secondary">Update password</button>
   </form>
 </section>
 
@@ -104,10 +102,13 @@ document.getElementById('password-form').addEventListener('submit', async (e) =>
 
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
+    const button = input?.parentElement?.querySelector('.toggle-password');
     if (input.type === "password") {
         input.type = "text";
+        if (button) button.textContent = 'Hide';
     } else {
         input.type = "password";
+        if (button) button.textContent = 'Show';
     }
 }
 </script>

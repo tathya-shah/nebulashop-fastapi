@@ -1,17 +1,16 @@
 {% extends "base.html" %}
 
 {% block title %}Orders - NebulaShop{% endblock %}
-{% block page_title %}Order History{% endblock %}
-{% block page_subtitle %}Track your recent purchases with product-level detail.{% endblock %}
-{% block header_actions %}<a class="btn btn-secondary" href="/">← Continue Shopping</a>{% endblock %}
+{% block page_kicker %}Purchase history{% endblock %}
+{% block page_title %}Orders you can scan quickly{% endblock %}
+{% block page_subtitle %}Track recent purchases, review variants, and open invoices without hunting for the next action.{% endblock %}
+{% block header_actions %}<a class="btn btn-secondary" href="/">Continue shopping</a>{% endblock %}
 
 {% block content %}
 <section id="orders-page" class="orders-page">
-  <div id="orders-list" class="orders-list"></div>
+  <div id="orders-list" class="orders-list" aria-live="polite"></div>
 </section>
 <script>
-  const API_BASE = '/api';
-
   function $(id) {
     return document.getElementById(id);
   }
@@ -24,7 +23,7 @@
       displayOrders(orders);
     } catch (error) {
       console.error('Error loading orders:', error);
-      $('orders-list').innerHTML = '<p class="empty-state"><span class="empty-state-icon">📦</span>Failed to load orders</p>';
+      $('orders-list').innerHTML = '<div class="empty-state"><span class="empty-state-icon">!</span><p>Failed to load orders.</p></div>';
     }
   }
 
@@ -34,23 +33,25 @@
 
     container.innerHTML = '';
     if (orders.length === 0) {
-      container.innerHTML = '<div class="empty-state"><span class="empty-state-icon">📦</span><p>No orders yet</p><a href="/" class="btn btn-primary" style="margin-top:1rem;display:inline-flex;">Shop Now</a></div>';
+      container.innerHTML = '<div class="empty-state"><span class="empty-state-icon">0</span><p>No orders yet.</p><a href="/" class="btn btn-primary">Shop now</a></div>';
       return;
     }
 
     orders.forEach((order, idx) => {
       const card = document.createElement('div');
       card.className = 'order-card stagger-' + Math.min(idx + 1, 6);
+      const statusClass = String(order.status || '').toLowerCase();
       const itemsHtml = order.items.map(item => {
         const specsText = Object.entries(item.selected_specs || {}).map(([k, v]) => `${v}`).join(' | ');
-        const specHtml = specsText ? `<span style="font-size: 0.75rem; color: var(--text-muted); display: block;">${specsText}</span>` : '';
+        const specHtml = specsText ? `<span class="cart-item-specs">${specsText}</span>` : '';
         return `
-        <div class="order-item" style="align-items: flex-start;">
+        <div class="order-item">
           <div>
-            <span>${item.name || `Product #${item.product_id}`} (x${item.quantity})</span>
+            <strong>${item.name || `Product #${item.product_id}`}</strong>
+            <span class="muted"> x${item.quantity}</span>
             ${specHtml}
           </div>
-          <span>$${Number(item.subtotal).toFixed(2)}</span>
+          <strong>$${Number(item.subtotal).toFixed(2)}</strong>
         </div>
         `;
       }).join('');
@@ -61,16 +62,16 @@
             <h4>Order #${order.id}</h4>
             <p class="order-date">${order.created_at}</p>
           </div>
-          <div class="order-status">${order.status}</div>
+          <div class="order-status ${statusClass}">${order.status}</div>
         </div>
         <div class="order-items">
           ${itemsHtml}
         </div>
-        <div class="order-total" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-          <span><strong>Total:</strong> $${Number(order.total).toFixed(2)}</span>
-          <div style="display: flex; gap: 0.5rem;">
-            ${order.status === 'Pending' ? `<button onclick="cancelOrder(${order.id})" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Cancel Order</button>` : ''}
-            <a href="/order/${order.id}" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8rem;">View Invoice</a>
+        <div class="order-total">
+          <span>Total: <strong>$${Number(order.total).toFixed(2)}</strong></span>
+          <div class="page-actions">
+            ${order.status === 'Pending' ? `<button onclick="cancelOrder(${order.id})" class="btn btn-danger btn-small">Cancel order</button>` : ''}
+            <a href="/order/${order.id}" class="btn btn-secondary btn-small">View invoice</a>
           </div>
         </div>
       `;

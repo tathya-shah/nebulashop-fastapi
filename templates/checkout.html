@@ -1,62 +1,65 @@
 {% extends "base.html" %}
 
 {% block title %}Checkout - NebulaShop{% endblock %}
-{% block page_title %}Checkout{% endblock %}
-{% block page_subtitle %}Review your items and complete your order.{% endblock %}
+{% block page_kicker %}Step 2 of 3{% endblock %}
+{% block page_title %}Checkout without friction{% endblock %}
+{% block page_subtitle %}Confirm shipping, choose delivery speed, and place the order with the summary visible the whole time.{% endblock %}
 
 {% block content %}
-<section id="checkout-page" style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
-  <form id="checkout-form" class="product-form" style="max-width: none;">
-    <div style="background: var(--surface); border: 1px solid var(--glass-border); padding: 1.5rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
-      <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">Shipping Details</h3>
+<div class="stepper" aria-label="Checkout progress">
+  <span class="step">Cart</span>
+  <span class="step active">Checkout</span>
+  <span class="step">Confirmation</span>
+</div>
+
+<section id="checkout-page" class="checkout-layout">
+  <form id="checkout-form" class="checkout-stack">
+    <div class="checkout-card">
+      <h3>Shipping details</h3>
       <div class="form-group">
-        <label for="shipping-address">Shipping Address</label>
-        <input type="text" id="shipping-address" required value="{{ current_user.address or '' }}" placeholder="Enter full address" />
+        <label for="shipping-address">Shipping address</label>
+        <input type="text" id="shipping-address" required value="{{ current_user.address or '' }}" placeholder="Full street address, city, country" />
       </div>
-      <div class="form-group" style="margin-top: 1rem;">
-        <label for="shipping-option">Shipping Speed</label>
-        <select id="shipping-option" style="width: 100%; padding: 0.7rem; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--bg); color: var(--text);">
-          <option value="5.00">Standard Shipping (3-5 days) - $5.00</option>
-          <option value="15.00">Express Shipping (1-2 days) - $15.00</option>
+      <div class="form-group">
+        <label for="shipping-option">Shipping speed</label>
+        <select id="shipping-option">
+          <option value="5.00">Standard shipping, 3-5 days, $5.00</option>
+          <option value="15.00">Express shipping, 1-2 days, $15.00</option>
         </select>
       </div>
     </div>
 
-    <div style="background: var(--surface); border: 1px solid var(--glass-border); padding: 1.5rem; border-radius: var(--radius-sm);">
-      <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">Payment Information</h3>
+    <div class="checkout-card">
+      <h3>Payment information</h3>
       <div class="form-group">
-        <label for="payment-method">Payment Method</label>
-        <input type="text" id="payment-method" required value="{{ current_user.payment_preference or '' }}" placeholder="e.g. Visa ending in 1234" />
+        <label for="payment-method">Payment method</label>
+        <input type="text" id="payment-method" required value="{{ current_user.payment_preference or '' }}" placeholder="Example: Visa ending in 1234" />
       </div>
     </div>
   </form>
 
-  <div style="background: var(--surface-2); border: 1px solid var(--glass-border); padding: 1.5rem; border-radius: var(--radius-sm); height: fit-content;">
-    <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">Order Summary</h3>
-    <div id="checkout-items" style="margin-bottom: 1rem; font-size: 0.9rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
-      <!-- Loaded dynamically -->
-    </div>
-    
-    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-      <span style="color: var(--text-muted);">Subtotal</span>
+  <aside class="checkout-card checkout-summary" aria-label="Order summary">
+    <h3>Order summary</h3>
+    <div id="checkout-items" class="checkout-items"></div>
+    <div class="summary-line">
+      <span>Subtotal</span>
       <strong id="summary-subtotal">$0.00</strong>
     </div>
-    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-      <span style="color: var(--text-muted);">Tax (10%)</span>
+    <div class="summary-line">
+      <span>Tax (10%)</span>
       <strong id="summary-tax">$0.00</strong>
     </div>
-    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
-      <span style="color: var(--text-muted);">Shipping</span>
+    <div class="summary-line">
+      <span>Shipping</span>
       <strong id="summary-shipping">$5.00</strong>
     </div>
-    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; font-size: 1.2rem;">
+    <div class="summary-line summary-total">
       <span>Total</span>
-      <strong id="summary-total" style="color: var(--primary);">$0.00</strong>
+      <strong id="summary-total">$0.00</strong>
     </div>
-    
-    <button type="button" id="place-order-btn" class="btn btn-primary" style="width: 100%;">Place Order</button>
-    <button type="button" id="cancel-checkout-btn" class="btn btn-danger" style="width: 100%; margin-top: 0.75rem;">Cancel Checkout</button>
-  </div>
+    <button type="button" id="place-order-btn" class="btn btn-primary"><i data-lucide="lock-keyhole" aria-hidden="true"></i> Place order</button>
+    <button type="button" id="cancel-checkout-btn" class="btn btn-secondary"><i data-lucide="x" aria-hidden="true"></i> Cancel checkout</button>
+  </aside>
 </section>
 
 <script>
@@ -75,14 +78,14 @@ async function loadCheckoutCart() {
         
         container.innerHTML = data.items.map(item => {
             const specsText = Object.entries(item.selected_specs || {}).map(([k, v]) => `${v}`).join(' | ');
-            const specHtml = specsText ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">${specsText}</div>` : '';
+            const specHtml = specsText ? `<div class="checkout-item-specs">${specsText}</div>` : '';
             return `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; align-items: flex-start;">
+            <div class="checkout-item">
                 <div>
-                    <span style="font-weight: 500;">${item.quantity}x ${item.name}</span>
+                    <div class="checkout-item-title">${item.quantity}x ${item.name}</div>
                     ${specHtml}
                 </div>
-                <span>$${item.subtotal.toFixed(2)}</span>
+                <strong>$${item.subtotal.toFixed(2)}</strong>
             </div>
             `;
         }).join('');
@@ -113,11 +116,15 @@ document.getElementById('place-order-btn').addEventListener('click', async () =>
         form.reportValidity();
         return;
     }
-    
+
+    const btn = document.getElementById('place-order-btn');
+    btn.disabled = true;
+    btn.textContent = 'Placing order...';
+
     const shipping_address = document.getElementById('shipping-address').value;
     const shipping_fee = document.getElementById('shipping-option').value;
     const payment_method = document.getElementById('payment-method').value;
-    
+
     try {
         const response = await fetch('/api/checkout', {
             method: 'POST',
@@ -127,17 +134,21 @@ document.getElementById('place-order-btn').addEventListener('click', async () =>
         
         if (response.ok) {
             const data = await response.json();
-            if (typeof showToast !== 'undefined') showToast('Order placed successfully!', 'success');
+            if (typeof showToast !== 'undefined') showToast('Order placed successfully', 'success');
             setTimeout(() => {
                 window.location.href = `/order/${data.order_id}`;
             }, 800);
         } else {
             const result = await response.json();
             if (typeof showToast !== 'undefined') showToast(result.detail || 'Checkout failed', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Place order';
         }
     } catch (err) {
         console.error(err);
         if (typeof showToast !== 'undefined') showToast('An error occurred', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Place order';
     }
 });
 
